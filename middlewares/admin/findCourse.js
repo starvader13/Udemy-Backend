@@ -1,4 +1,4 @@
-const { Course } = require("../db/schema");
+const { Course } = require("../../db/schema");
 
 async function findUser(req, res, next){
     const jsonData = req.body;

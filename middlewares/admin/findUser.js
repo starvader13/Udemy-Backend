@@ -1,4 +1,4 @@
-const { Admin } = require("../db/schema");
+const { Admin } = require("../../db/schema");
 
 async function findUser(req, res, next){
     const jsonData = req.body;

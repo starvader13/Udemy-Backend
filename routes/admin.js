@@ -2,11 +2,11 @@ const express = require("express");
 const jwt = require("jsonwebtoken")
 const { Admin, Course } = require("../db/schema");
 const usernameAuthentication = require("../middlewares/usernameAuth");
-const adminInputAuthentication = require("../middlewares/adminInputAuth");
-const findUser = require("../middlewares/findUser");
+const inputAuthentication = require("../middlewares/inputAuth");
+const findUser = require("../middlewares/admin/findUser");
 const signatureAuthorization = require("../middlewares/signatureAuthorize");
-const courseInputAuthentication = require("../middlewares/courseInputAuth")
-const findCourse = require("../middlewares/findCourse")
+const courseInputAuthentication = require("../middlewares/admin/courseInputAuth")
+const findCourse = require("../middlewares/admin/findCourse")
 require('dotenv').config();
 
 const app = express();
@@ -14,7 +14,7 @@ const secretKey = process.env.JWT_SECRET_KEY;
 
 app.use(express.json());
 
-app.post("/signup", usernameAuthentication, adminInputAuthentication, findUser, async (req, res)=>{
+app.post("/signup", usernameAuthentication, inputAuthentication, findUser, async (req, res)=>{
     const jsonData = req.body;
 
     const admin = new Admin(jsonData);
@@ -31,14 +31,14 @@ app.post("/signup", usernameAuthentication, adminInputAuthentication, findUser, 
     });
 })
 
-app.post("/signin", adminInputAuthentication, async (req, res)=>{
+app.post("/signin", inputAuthentication, async (req, res)=>{
     const jsonData = req.body;
 
     const response = await Admin.findOne({email: jsonData.email, password: jsonData.password});
 
     if(!response){
         return res.status(401).json({
-            msg: "Either the email or the password is incorrect"
+            msg: "Either the admin email or the password is incorrect"
         });
     }
 
@@ -50,7 +50,9 @@ app.post("/signin", adminInputAuthentication, async (req, res)=>{
     })
 })
 
-app.post("/courses", signatureAuthorization, courseInputAuthentication, findCourse, async (req, res)=>{
+app.use(signatureAuthorization);
+
+app.post("/courses", courseInputAuthentication, findCourse, async (req, res)=>{
     const jsonData = req.body;
     jsonData.isPublished = true;
 
@@ -69,7 +71,7 @@ app.post("/courses", signatureAuthorization, courseInputAuthentication, findCour
     });
 })
 
-app.get("/courses", signatureAuthorization,async (req,res)=>{
+app.get("/courses", async (req,res)=>{
     const response = await Course.find();
     if(!response){
         return res.status(204).json({
@@ -81,7 +83,3 @@ app.get("/courses", signatureAuthorization,async (req,res)=>{
         courses: response
     })
 })
-
-app.listen(3000,()=>{
-    console.log("Server is listening at port 3000");
-});

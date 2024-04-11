@@ -1,10 +1,6 @@
 const zod = require("zod");
 
-const usernameAuthenticationSchema = zod.object({
-    username: zod.string(),
-    email: zod.string().email(),
-    password: zod.string().min(6)
-})
+const usernameAuthenticationSchema = zod.string();
 
 function usernameAuthentication(req, res, next){
     const username = req.body.username;
