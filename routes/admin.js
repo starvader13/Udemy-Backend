@@ -1,4 +1,4 @@
-const express = require("express");
+const { Router } = require("express");
 const jwt = require("jsonwebtoken")
 const { Admin, Course } = require("../db/schema");
 const usernameAuthentication = require("../middlewares/usernameAuth");
@@ -9,12 +9,10 @@ const courseInputAuthentication = require("../middlewares/admin/courseInputAuth"
 const findCourse = require("../middlewares/admin/findCourse")
 require('dotenv').config();
 
-const app = express();
+const route = Router();
 const secretKey = process.env.JWT_SECRET_KEY;
 
-app.use(express.json());
-
-app.post("/signup", usernameAuthentication, inputAuthentication, findUser, async (req, res)=>{
+route.post("/signup", usernameAuthentication, inputAuthentication, findUser, async (req, res)=>{
     const jsonData = req.body;
 
     const admin = new Admin(jsonData);
@@ -31,7 +29,7 @@ app.post("/signup", usernameAuthentication, inputAuthentication, findUser, async
     });
 })
 
-app.post("/signin", inputAuthentication, async (req, res)=>{
+route.post("/signin", inputAuthentication, async (req, res)=>{
     const jsonData = req.body;
 
     const response = await Admin.findOne({email: jsonData.email, password: jsonData.password});
@@ -50,9 +48,9 @@ app.post("/signin", inputAuthentication, async (req, res)=>{
     })
 })
 
-app.use(signatureAuthorization);
+route.use(signatureAuthorization);
 
-app.post("/courses", courseInputAuthentication, findCourse, async (req, res)=>{
+route.post("/courses", courseInputAuthentication, findCourse, async (req, res)=>{
     const jsonData = req.body;
     jsonData.isPublished = true;
 
@@ -71,7 +69,7 @@ app.post("/courses", courseInputAuthentication, findCourse, async (req, res)=>{
     });
 })
 
-app.get("/courses", async (req,res)=>{
+route.get("/courses", async (req,res)=>{
     const response = await Course.find();
     if(!response){
         return res.status(204).json({
@@ -83,3 +81,5 @@ app.get("/courses", async (req,res)=>{
         courses: response
     })
 })
+
+module.exports = route;

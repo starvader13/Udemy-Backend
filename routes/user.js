@@ -1,4 +1,4 @@
-const express = require("express")
+const { Router } = require("express")
 const jwt = require("jsonwebtoken");
 const usernameAuthentication = require("../middlewares/usernameAuth");
 const inputAuthentication = require("../middlewares/inputAuth");
@@ -8,17 +8,15 @@ const findCourse = require("../middlewares/user/findCourse")
 const { User, Course, Purchase } = require("../db/schema");
 require('dotenv').config();
 
-const app = express();
+const route = Router();
 const secretKey = process.env.JWT_SECRET_KEY;
-
-app.use(express.json());
 
 function signatureToJson(signature){
     const token = signature.slice(7, signature.length);
     return jwt.decode(token);
 }
 
-app.post("/signup", usernameAuthentication, inputAuthentication, findUser, async (req, res)=>{
+route.post("/signup", usernameAuthentication, inputAuthentication, findUser, async (req, res)=>{
     const jsonData = req.body;
 
     const user = new User(jsonData);
@@ -35,7 +33,7 @@ app.post("/signup", usernameAuthentication, inputAuthentication, findUser, async
     });
 })
 
-app.post("/signin", inputAuthentication, async (req, res)=>{
+route.post("/signin", inputAuthentication, async (req, res)=>{
     const jsonData = req.body;
 
     const response = await User.findOne({email: jsonData.email, password: jsonData.password});
@@ -54,9 +52,9 @@ app.post("/signin", inputAuthentication, async (req, res)=>{
     })
 })
 
-app.use(signatureAuthorization);
+route.use(signatureAuthorization);
 
-app.get("/courses", async (req, res)=>{
+route.get("/courses", async (req, res)=>{
     const response = await Course.find();
 
     if(!response){
@@ -70,7 +68,7 @@ app.get("/courses", async (req, res)=>{
     })
 })
 
-app.post("/courses/:courseId", findCourse, async (req, res)=>{
+route.post("/courses/:courseId", findCourse, async (req, res)=>{
     const courseId = req.params.courseId;
 
     const json = signatureToJson(req.headers.authorization);
@@ -95,7 +93,7 @@ app.post("/courses/:courseId", findCourse, async (req, res)=>{
     });
 })
 
-app.get("/purchasedCourses", async (req, res)=>{
+route.get("/purchasedCourses", async (req, res)=>{
     const json = signatureToJson(req.headers.authorization);
 
     const user = await User.findOne({ email: json.email });
@@ -117,5 +115,6 @@ app.get("/purchasedCourses", async (req, res)=>{
     return res.status(200).json({
         purchasedCourses
     })
-
 })
+
+module.exports = route;
